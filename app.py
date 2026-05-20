@@ -1,7 +1,7 @@
-import pandas as pd               # pandas : bibliothèque pour manipuler des tableaux (DataFrame)
-import seaborn as sns             # seaborn : librairie de visualisation (basée sur matplotlib)
-import matplotlib.pyplot as plt   # matplotlib : pour créer des figures personnalisées
-import streamlit as st            # streamlit : framework pour créer des applications web interactives en Python
+import pandas as pd  # pandas : bibliothèque pour manipuler des tableaux (DataFrame)
+import seaborn as sns  # seaborn : librairie de visualisation (basée sur matplotlib)
+import matplotlib.pyplot as plt  # matplotlib : pour créer des figures personnalisées
+import streamlit as st  # streamlit : framework pour créer des applications web interactives en Python
 
 # Configuration de la page Streamlit -----------------------------------------
 st.set_page_config(page_title="💼 Analyse des Salaires", layout="wide")
@@ -27,11 +27,28 @@ if fichier is not None:
     # pd.read_csv : lit le fichier CSV en mémoire comme un DataFrame.
     # st.dataframe : affiche un tableau interactif dans l'app (avec scroll, tri possible).
 
-    # Nettoyage basique des données ----------------------------------------
-    df['Salaire'] = pd.to_numeric(df['Salaire'], errors='coerce')
-    # pd.to_numeric convertit la colonne en numérique ; errors='coerce' transforme les valeurs invalides en NaN.
-    df = df.dropna(subset=['Salaire'])
-    # dropna(subset=['Salaire']) : supprime les lignes où Salaire est manquant (NaN).
+    # =========================================================================
+    # MODIFICATION ICI : Nettoyage automatique et sécurisé de la colonne Salaire
+    # =========================================================================
+    st.write("👉 Colonnes détectées dans votre fichier :", list(df.columns))
+
+    # On cherche s'il y a une colonne qui ressemble à 'Salaire' (sans se soucier des majuscules/accents)
+    col_salaire = None
+    for c in df.columns:
+        if c.strip().lower() in ['salaire', 'salaires', 'salary', 'salaries']:
+            col_salaire = c
+            break
+
+    if col_salaire:
+        # On convertit en numérique la colonne trouvée
+        df[col_salaire] = pd.to_numeric(df[col_salaire], errors='coerce')
+        # On supprime les lignes vides (NaN)
+        df = df.dropna(subset=[col_salaire])
+        # On la renomme proprement 'Salaire' pour que le reste du code du prof fonctionne
+        df = df.rename(columns={col_salaire: 'Salaire'})
+    else:
+        st.error("🚨 Erreur : Impossible de trouver une colonne pour les salaires. Vérifiez votre fichier CSV.")
+    # =========================================================================
 
     # Statistiques descriptives ---------------------------------------------
     st.subheader("📈 Statistiques sur les salaires")
@@ -49,8 +66,10 @@ if fichier is not None:
     # On cast en int parce que slider attend des entiers — explique la conversion.
 
     st.markdown(f"### 👔 Employés gagnant plus de **{seuil:,}**")
-    df_filtre = df[df['Salaire'] > seuil]   # filtrage de pandas (boolean indexing)
+    df_filtre = df[df['Salaire'] > seuil]  # filtrage de pandas (boolean indexing)
     st.dataframe(df_filtre)
+
+
     # Ici on affiche la table filtrée. Très utile pour montrer l'impact du slider.
 
     # Catégorisation (colonne calculée) -----------------------------------
@@ -61,6 +80,7 @@ if fichier is not None:
             return "Revenu moyen"
         else:
             return "Haut revenu"
+
 
     df['Catégorie'] = df['Salaire'].apply(categorie_salaire)
     # On ajoute une nouvelle colonne 'Catégorie' en appliquant une fonction ligne par ligne.
@@ -79,9 +99,15 @@ if fichier is not None:
 
     # Moyenne par département ----------------------------------------------
     st.subheader("🏢 Salaire moyen par département")
-    salaire_par_dept = df.groupby("Département")["Salaire"].mean().sort_values(ascending=False)
-    st.bar_chart(salaire_par_dept)
-    # groupby + mean calcule le salaire moyen par département ; sort_values pour trier la série.
+
+    # Sécurité au cas où la colonne s'appelle "Departement" (sans accent) dans le CSV
+    col_dept = "Département" if "Département" in df.columns else "Departement"
+
+    if col_dept in df.columns:
+        salaire_par_dept = df.groupby(col_dept)["Salaire"].mean().sort_values(ascending=False)
+        st.bar_chart(salaire_par_dept)
+    else:
+        st.warning("La colonne 'Département' ou 'Departement' est introuvable.")
 
     # Bouton de téléchargement ---------------------------------------------
     st.download_button(
