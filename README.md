@@ -1,13 +1,5 @@
 # Salary_imc
 Application Streamlit interactive d'analyse et de visualisation des salaires RH, inspirée du contexte Sonatel.
-BAIDY BA
-	
-AttachmentsTue, May 19, 4:34 PM (19 hours ago)
-	
-	
-to amoussatekiyath2, fatoukgaye08, me, hunchogrange, mamadou2710g, assane12.dia, ahmedoldrame
-It looks like this message is in French
-
 Projet : “Analyse interactive des salaires d’entreprise”
 
 Contexte : Vous travaillez comme analyste de données dans une entreprise de télécommunications (inspirée de Sonatel). La direction RH souhaite mieux comprendre la distribution des salaires des employés afin de :
